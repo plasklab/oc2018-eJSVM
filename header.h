@@ -35,6 +35,10 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef USE_BOEHMGC
 #include <gc.h>
@@ -77,5 +81,6 @@ typedef uint64_t JSValue;
 #include "builtin.h"
 #include "globals.h"
 #include "extern.h"
+#include "raspi.h"
 
 #endif // HEADER_H_
