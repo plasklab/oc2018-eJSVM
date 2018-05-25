@@ -30,7 +30,7 @@ BUILTIN_FUNCTION(builtin_isNaN)
 {
   double d;
 
-  builtin_prologue();  
+  builtin_prologue();
   d = to_double(context, args[1]);
   set_a(context, true_false(isnan(d)));
 }
@@ -42,7 +42,7 @@ BUILTIN_FUNCTION(builtin_isFinite)
 {
   double d;
 
-  builtin_prologue();  
+  builtin_prologue();
   d = to_double(context, args[1]);
   set_a(context, true_false(isinf(d)));
 }
@@ -59,7 +59,7 @@ BUILTIN_FUNCTION(builtin_parse_int)
   int32_t irad;
   long ret;
 
-  builtin_prologue();  
+  builtin_prologue();
   str = to_string(context, args[1]);
   rad = to_number(context, args[2]);
   cstr = string_to_cstr(str);
@@ -90,7 +90,7 @@ BUILTIN_FUNCTION(builtin_parse_float)
   char *cstr;
   double x;
 
-  builtin_prologue();  
+  builtin_prologue();
   str = to_string(context, args[1]);
   cstr = string_to_cstr(str);
   cstr = space_chomp(cstr);
@@ -244,6 +244,7 @@ ObjGconstsProp global_gconsts_props[] = {
   { "NaN",       &gconsts.g_flonum_nan,      ATTR_DDDE },
   { "Infinity",  &gconsts.g_flonum_infinity, ATTR_DDDE },
   { "Math",      &gconsts.g_math,            ATTR_DE   },
+  { "Raspi",     &gconsts.g_raspi,           ATTR_DE   },
   { NULL,        NULL,                       ATTR_DE   }
 };
 

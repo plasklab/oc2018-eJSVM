@@ -330,6 +330,7 @@ extern void init_builtin_number(Context *);
 extern void init_builtin_string(Context *);
 extern void init_builtin_boolean(Context *);
 extern void init_builtin_math(Context *);
+extern void init_builtin_raspi(Context *);
 #ifdef USE_REGEXP
 #ifdef need_regexp
 extern void init_builtin_regexp(Context *);

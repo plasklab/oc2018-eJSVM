@@ -80,12 +80,14 @@ void init_global_objects(void) {
   set_prototype_de(NULL, gconsts.g_object_proto, JS_NULL);
   gconsts.g_global = new_big_predef_object(NULL);
   gconsts.g_math = new_big_predef_object(NULL);
+  gconsts.g_raspi = new_big_predef_object(NULL);
 
 #ifdef HIDDEN_CLASS
 #ifdef HIDDEN_DEBUG
   print_hidden_class("g_object_proto", obj_hidden_class(gconsts.g_object_proto));
   print_hidden_class("g_global", obj_hidden_class(gconsts.g_global));
   print_hidden_class("g_math", obj_hidden_class(gconsts.g_math));
+  print_hidden_class("g_raspi", obj_hidden_class(gconsts.g_raspi));
 #endif
 #endif
 
@@ -100,6 +102,7 @@ void init_builtin(Context *ctx) {
   init_builtin_number(ctx);
   init_builtin_string(ctx);
   init_builtin_boolean(ctx);
+  init_builtin_raspi(ctx);
 #ifdef need_flonum
   init_builtin_math(ctx);
 #endif /* need_flonum */

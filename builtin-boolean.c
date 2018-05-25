@@ -29,7 +29,7 @@ BUILTIN_FUNCTION(boolean_constr)
 {
   JSValue rsv;
 
-  builtin_prologue();  
+  builtin_prologue();
   rsv = new_normal_boolean_object(context, JS_TRUE);
   set___proto___all(context, rsv, gconsts.g_boolean_proto);
   if (na > 0)
@@ -41,7 +41,7 @@ BUILTIN_FUNCTION(boolean_valueOf)
 {
   JSValue arg;
 
-  builtin_prologue();  
+  builtin_prologue();
   arg = args[0];
   if (is_boolean_object(arg))
     arg = boolean_object_value(arg);

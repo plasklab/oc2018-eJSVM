@@ -36,8 +36,8 @@ typedef struct {
 
 int map_gpio(rpi_gpio *gpio);
 void unmap_gpio(rpi_gpio *gpio);
-int pin_write(rpi_gpio *gpio, int pin, int value);
-int pin_read(rpi_gpio *gpio, int pin);
+void raspi_pin_write(rpi_gpio *gpio, int pin, int value);
+int raspi_pin_read(rpi_gpio *gpio, int pin);
 int get_gpfsel(int pin);
 int get_gpclr_offset(int pin);
 int get_gpset_offset(int pin);

@@ -75,6 +75,7 @@ EXTERN struct global_constant_objects {
 
   JSValue g_global;
   JSValue g_math;
+  JSValue g_raspi;
 } gconsts;
 
 EXTERN struct global_malloced_objects {

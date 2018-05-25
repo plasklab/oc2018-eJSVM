@@ -33,11 +33,11 @@ void unmap_gpio(rpi_gpio *gpio) {
   close(gpio->memory_fd);
 }
 
-int pin_write(rpi_gpio *gpio, int pin, int value) {
+void raspi_pin_write(rpi_gpio *gpio, int pin, int value) {
   int gpfsel = get_gpfsel(pin);
   int gpset  = get_gpset_offset(pin);
   if (gpfsel < 0 || gpset < 0)
-      return -1;
+    return;
 
   *(gpio->addr + gpfsel) |= FSEL_OUTPUT;
 
@@ -45,10 +45,9 @@ int pin_write(rpi_gpio *gpio, int pin, int value) {
     *(gpio->addr + gpset) |= (0 << (pin & 31));
   else
     *(gpio->addr + gpset) |= (0 << (pin & 31));
-  return 0;
 }
 
-int pin_read(rpi_gpio *gpio, int pin) {
+int raspi_pin_read(rpi_gpio *gpio, int pin) {
   int gpfsel = get_gpfsel(pin);
   int gpclr  = get_gpclr_offset(pin);
   if (gpfsel < 0 || gpclr < 0)
@@ -79,25 +78,81 @@ int get_gpset_offset(int pin) {
   return -1;
 }
 
-BUILTIN_FUNCTION(raspi_light)
+BUILTIN_FUNCTION(pin_write)
 {
+  JSValue v1, v2;
+  int pin, value;
+
+  builtin_prologue();
+  v1 = args[1];
+  if (!is_number(v1)) v1 = to_number(context, v1);
+    return;
+  if (!is_fixnum(v1))
+    return;
+  pin = to_fixnum(v1);
+
+  v2 = args[2];
+  if (!is_number(v2)) v2 = to_number(context, v2);
+    return;
+  if (!is_fixnum(v2))
+    return;
+  value = to_fixnum(v2);
+
   rpi_gpio gpio = {GPIO_BASE};
   map_gpio(&gpio);
-  pin_write(&gpio, 10, 1);
+  raspi_pin_write(&gpio, pin, value);
   unmap_gpio(&gpio);
 }
-BUILTIN_FUNCTION(raspi_lightoff)
-{
-  rpi_gpio gpio = {GPIO_BASE};
 
+BUILTIN_FUNCTION(pin_read)
+{
+  JSValue v1;
+  int pin, value;
+
+  builtin_prologue();
+  v1 = args[1];
+  if (!is_number(v1)) v1 = to_number(context, v1);
+    return;
+  if (!is_fixnum(v1))
+    return;
+  pin = to_fixnum(v1);
+
+  rpi_gpio gpio = {GPIO_BASE};
   map_gpio(&gpio);
-  pin_write(&gpio, 10, 0);
+  value = raspi_pin_read(&gpio, pin);
   unmap_gpio(&gpio);
+
+  set_a_number(value);
 }
 
 ObjBuiltinProp raspi_funcs[] = {
-  { "light",    raspi_light,    0, ATTR_DE },
-  { "lightoff", raspi_lightoff, 0, ATTR_DE },
-  { "NULL",     NULL,           0, ATTR_DE }
+  { "pinWrite", pin_write, 0, ATTR_DE },
+  { "pinRead",  pin_read,  0, ATTR_DE },
+  { "NULL",     NULL,      0, ATTR_DE }
 };
+
+ObjDoubleProp raspi_value[] = {
+  { NULL, 0.0, ATTR_ALL }
+};
+
+void init_builtin_raspi(Context *ctx)
+{
+  JSValue raspi;
+
+  raspi = gconsts.g_raspi;
+  {
+    ObjDoubleProp *p = raspi_value;
+    while (p->name != NULL) {
+      set_obj_cstr_prop(ctx, raspi, p->name, double_to_flonum(p->value), p->attr);
+      p++;
+    }
+  }
+  {
+    ObjBuiltinProp *p = raspi_funcs;
+    while (p->name != NULL) {
+      set_obj_cstr_prop(ctx, raspi, p->name, new_normal_builtin(ctx, p->fn, p->na), p->attr);
+      p++;
+    }
+  }
+}
 

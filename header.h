@@ -31,6 +31,7 @@
 #include <inttypes.h>
 #include <assert.h>
 #include <math.h>
+#include <fcntl.h>
 #include <float.h>
 #include <time.h>
 #include <sys/time.h>
@@ -38,7 +39,6 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 
 #ifdef USE_BOEHMGC
 #include <gc.h>
