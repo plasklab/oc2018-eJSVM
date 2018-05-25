@@ -86,17 +86,15 @@ BUILTIN_FUNCTION(pin_write)
   builtin_prologue();
   v1 = args[1];
   if (!is_number(v1)) v1 = to_number(context, v1);
-    return;
   if (!is_fixnum(v1))
     return;
-  pin = to_fixnum(v1);
+  pin = (int)fixnum_to_int(v1);
 
   v2 = args[2];
   if (!is_number(v2)) v2 = to_number(context, v2);
-    return;
   if (!is_fixnum(v2))
     return;
-  value = to_fixnum(v2);
+  value = (int)fixnum_to_int(v2);
 
   rpi_gpio gpio = {GPIO_BASE};
   map_gpio(&gpio);
@@ -106,28 +104,27 @@ BUILTIN_FUNCTION(pin_write)
 
 BUILTIN_FUNCTION(pin_read)
 {
-  JSValue v1;
+  JSValue v;
   int pin, value;
 
   builtin_prologue();
-  v1 = args[1];
-  if (!is_number(v1)) v1 = to_number(context, v1);
+  v = args[1];
+  if (!is_number(v)) v = to_number(context, v);
+  if (!is_fixnum(v))
     return;
-  if (!is_fixnum(v1))
-    return;
-  pin = to_fixnum(v1);
+  pin = (int)fixnum_to_int(v);
 
   rpi_gpio gpio = {GPIO_BASE};
   map_gpio(&gpio);
   value = raspi_pin_read(&gpio, pin);
   unmap_gpio(&gpio);
 
-  set_a_number(value);
+  set_a(context, int_to_fixnum(value));
 }
 
 ObjBuiltinProp raspi_funcs[] = {
-  { "pinWrite", pin_write, 0, ATTR_DE },
-  { "pinRead",  pin_read,  0, ATTR_DE },
+  { "pinWrite", pin_write, 2, ATTR_DE },
+  { "pinRead",  pin_read,  2, ATTR_DE },
   { "NULL",     NULL,      0, ATTR_DE }
 };
 
