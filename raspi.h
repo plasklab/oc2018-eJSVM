@@ -12,8 +12,12 @@
 
 #define GPSET0 0x01C
 #define GPSET1 0x020
+
 #define GPCLR0 0x028
 #define GPCLR1 0x02C
+
+#define GPLEV0 0x034
+#define GPLEV1 0x038
 
 #define FSEL_INPUT  0b000
 #define FSEL_OUTPUT 0b001
@@ -24,21 +28,17 @@
 #define FSEL_ALT4   0b011
 #define FSEL_ALT5   0b010
 
+#define PI_OFFSET (gpio >> 5)
+#define PI_BIT    (1 << (gpio & 0x1F))
+
 #define LOW  0
 #define HIGH 1
 
-typedef struct {
-  unsigned long gpio_base;
-  int   memory_fd;
-  void  *map;
-  volatile unsigned int *addr;
-} rpi_gpio;
+static volatile uint32_t *gpioReg = MAP_FAILED;
 
-int map_gpio(rpi_gpio *gpio);
-void unmap_gpio(rpi_gpio *gpio);
-void raspi_pin_write(rpi_gpio *gpio, int pin, int value);
-int raspi_pin_read(rpi_gpio *gpio, int pin);
-int get_gpfsel(int pin);
-int get_gpclr_offset(int pin);
-int get_gpset_offset(int pin);
+int map_gpio();
+void gpio_set_mode(int gpio, int mode);
+int gpio_get_mode(int gpio);
+int gpio_read(int gpio);
+void gpio_write(int gpio, int level);
 

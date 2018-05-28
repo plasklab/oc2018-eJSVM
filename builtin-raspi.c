@@ -2,93 +2,89 @@
 #define EXTERN extern
 #include "header.h"
 
-int map_gpio(rpi_gpio *gpio) {
-  gpio->memory_fd = open("/dev/gpiomem", O_RDWR|O_SYNC);
+int map_gpio()
+{
+  int fd;
 
-  if(gpio->memory_fd < 0) {
+  if (gpioReg != MAP_FAILED)
+      return 0;
+
+  fd = open("/dev/gpiomem", O_RDWR|O_SYNC);
+  if(fd < 0) {
     perror("Failed to open /dev/gpiomem. try change permission");
-    return 1;
+    return -1;
   }
 
-  gpio->map = mmap(
+  gpioReg = (volatile uint32_t *)mmap(
     NULL,
-    BLOCK_SIZE,
+    0xB4,
     PROT_READ|PROT_WRITE,
     MAP_SHARED,
-    gpio->memory_fd,
-    gpio->gpio_base
+    fd,
+    GPIO_BASE
   );
+  close(fd);
 
-  if(gpio->map == MAP_FAILED) {
+  if(gpioReg == MAP_FAILED) {
     perror("mmap");
-    return 1;
+    return -1;
   }
 
-  gpio->addr = (volatile unsigned int *)gpio->map;
+  for (int i = 0; i < 54; i++) {
+    printf("gpio=%d mode=%d level=%d\n", i, gpio_get_mode(i), gpio_read(i));
+  }
+
   return 0;
 }
 
-void unmap_gpio(rpi_gpio *gpio) {
-  munmap(gpio->map, BLOCK_SIZE);
-  close(gpio->memory_fd);
+void gpio_set_mode(int gpio, int mode)
+{
+  int reg, shift;
+
+  reg = gpio / 10;
+  shift = (gpio % 10) * 3;
+
+  gpioReg[reg] = (gpioReg[reg] & ~(7 << shift)) | (mode << shift);
 }
 
-void raspi_pin_write(rpi_gpio *gpio, int pin, int value) {
-  int gpfsel = get_gpfsel(pin);
-  int gpset  = get_gpset_offset(pin);
-  if (gpfsel < 0 || gpset < 0)
-    return;
+int gpio_get_mode(int gpio)
+{
+  int reg, shift;
 
-  *(gpio->addr + gpfsel) |= FSEL_OUTPUT;
+  reg = gpio / 10;
+  shift = (gpio % 10) * 3;
 
-  if (value == LOW)
-    *(gpio->addr + gpset) |= (0 << (pin & 31));
-  else
-    *(gpio->addr + gpset) |= (0 << (pin & 31));
+  return (*(gpioReg + reg) >> shift) & 7;
 }
 
-int raspi_pin_read(rpi_gpio *gpio, int pin) {
-  int gpfsel = get_gpfsel(pin);
-  int gpclr  = get_gpclr_offset(pin);
-  if (gpfsel < 0 || gpclr < 0)
-      return -1;
-
-  *(gpio->addr + gpfsel) = FSEL_INPUT;
-  return (int)(*(gpio->addr + gpclr));
+int gpio_read(int gpio)
+{
+  if ((*(gpioReg + GPLEV0 + PI_OFFSET) & PI_BIT) != 0) return 1;
+  else                                                 return 0;
 }
 
-int get_gpfsel(int pin) {
-  if (pin >=  0 && pin <=  9) return GPFSEL0;
-  if (pin >= 10 && pin <= 19) return GPFSEL1;
-  if (pin >= 20 && pin <= 29) return GPFSEL2;
-  if (pin >= 30 && pin <= 39) return GPFSEL3;
-  if (pin >= 40 && pin <= 49) return GPFSEL4;
-  return -1;
+void gpio_write(int gpio, int level)
+{
+  if (level == 0) *(gpioReg + GPCLR0 + PI_OFFSET) = PI_BIT;
+  else            *(gpioReg + GPSET0 + PI_OFFSET) = PI_BIT;
 }
 
-int get_gpclr_offset(int pin) {
-  if (pin >=  0 && pin <= 31) return GPCLR0;
-  if (pin >= 32 && pin <= 53) return GPCLR1;
-  return -1;
+BUILTIN_FUNCTION(raspi_init)
+{
+  map_gpio();
 }
 
-int get_gpset_offset(int pin) {
-  if (pin >=  0 && pin <= 31) return GPSET0;
-  if (pin >= 32 && pin <= 53) return GPSET1;
-  return -1;
-}
-
-BUILTIN_FUNCTION(pin_write)
+BUILTIN_FUNCTION(raspi_gpio_write)
 {
   JSValue v1, v2;
-  int pin, value;
+  int gpio, value;
 
   builtin_prologue();
   v1 = args[1];
   if (!is_number(v1)) v1 = to_number(context, v1);
   if (!is_fixnum(v1))
     return;
-  pin = (int)fixnum_to_int(v1);
+  gpio = (int)fixnum_to_int(v1);
 
   v2 = args[2];
   if (!is_number(v2)) v2 = to_number(context, v2);
@@ -96,36 +92,32 @@ BUILTIN_FUNCTION(pin_write)
     return;
   value = (int)fixnum_to_int(v2);
 
-  rpi_gpio gpio = {GPIO_BASE};
-  map_gpio(&gpio);
-  raspi_pin_write(&gpio, pin, value);
-  unmap_gpio(&gpio);
+  gpio_set_mode(gpio, FSEL_OUTPUT);
+  gpio_write(gpio, value);
 }
 
-BUILTIN_FUNCTION(pin_read)
+BUILTIN_FUNCTION(raspi_gpio_read)
 {
   JSValue v;
-  int pin, value;
+  int gpio, value;
 
   builtin_prologue();
   v = args[1];
   if (!is_number(v)) v = to_number(context, v);
   if (!is_fixnum(v))
     return;
-  pin = (int)fixnum_to_int(v);
+  gpio = (int)fixnum_to_int(v);
 
-  rpi_gpio gpio = {GPIO_BASE};
-  map_gpio(&gpio);
-  value = raspi_pin_read(&gpio, pin);
-  unmap_gpio(&gpio);
-
+  gpio_set_mode(gpio, FSEL_INPUT);
+  value = gpio_read(gpio);
   set_a(context, int_to_fixnum(value));
 }
 
 ObjBuiltinProp raspi_funcs[] = {
-  { "pinWrite", pin_write, 2, ATTR_DE },
-  { "pinRead",  pin_read,  2, ATTR_DE },
-  { "NULL",     NULL,      0, ATTR_DE }
+  { "init",      raspi_init,       0, ATTR_DE },
+  { "gpioWrite", raspi_gpio_write, 2, ATTR_DE },
+  { "gpioRead",  raspi_gpio_read,  2, ATTR_DE },
+  { "NULL",      NULL,             0, ATTR_DE }
 };
 
 ObjDoubleProp raspi_value[] = {
