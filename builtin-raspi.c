@@ -76,6 +76,11 @@ BUILTIN_FUNCTION(raspi_init)
   map_gpio();
 }
 
+BUILTIN_FUNCTION(raspi_end)
+{
+  munmap(gpioReg, 0xB4);
+}
+
 BUILTIN_FUNCTION(raspi_gpio_write)
 {
   JSValue v1, v2;
@@ -123,6 +128,7 @@ BUILTIN_FUNCTION(raspi_gpio_read)
 
 ObjBuiltinProp raspi_funcs[] = {
   { "init",      raspi_init,       0, ATTR_DE },
+  { "end",       raspi_end,       0, ATTR_DE },
   { "gpioWrite", raspi_gpio_write, 2, ATTR_DE },
   { "gpioRead",  raspi_gpio_read,  2, ATTR_DE },
   { NULL,        NULL,             0, ATTR_DE }
