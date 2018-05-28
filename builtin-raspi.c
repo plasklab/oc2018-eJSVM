@@ -19,7 +19,7 @@ int map_gpio()
 
   gpioReg = (uint32_t *)mmap(
     NULL,
-    0xB4,
+    BLOCK_SIZE,
     PROT_READ|PROT_WRITE,
     MAP_SHARED,
     fd,
@@ -30,10 +30,6 @@ int map_gpio()
   if(gpioReg == MAP_FAILED) {
     perror("mmap");
     return -1;
-  }
-
-  for (i = 0; i < 54; i++) {
-    printf("gpio=%d mode=%d level=%d\n", i, gpio_get_mode(i), gpio_read(i));
   }
 
   return 0;
@@ -61,24 +57,19 @@ int gpio_get_mode(int gpio)
 
 int gpio_read(int gpio)
 {
-  if ((*(gpioReg + GPLEV0 + PI_OFFSET) & PI_BIT) != 0) return 1;
-  else                                                 return 0;
+  if ((*(gpioReg + GPLEV0 + PI_BANK(gpio)) & PI_BIT(gpio)) != 0) return 1;
+  else                                                           return 0;
 }
 
 void gpio_write(int gpio, int level)
 {
-  if (level == 0) *(gpioReg + GPCLR0 + PI_OFFSET) = PI_BIT;
-  else            *(gpioReg + GPSET0 + PI_OFFSET) = PI_BIT;
+  if (level == 0) *(gpioReg + GPCLR0 + PI_BANK(gpio)) = PI_BIT(gpio);
+  else            *(gpioReg + GPSET0 + PI_BANK(gpio)) = PI_BIT(gpio);
 }
 
 BUILTIN_FUNCTION(raspi_init)
 {
   map_gpio();
-}
-
-BUILTIN_FUNCTION(raspi_end)
-{
-  munmap(gpioReg, 0xB4);
 }
 
 BUILTIN_FUNCTION(raspi_gpio_write)
@@ -99,14 +90,8 @@ BUILTIN_FUNCTION(raspi_gpio_write)
     return;
   value = (int)fixnum_to_int(v2);
 
-  printf("start gpio set mode\n");
-  fflush(stdout);
   gpio_set_mode(gpio, FSEL_OUTPUT);
-  printf("start gpio write\n");
-  fflush(stdout);
   gpio_write(gpio, value);
-  printf("end\n");
-  fflush(stdout);
 }
 
 BUILTIN_FUNCTION(raspi_gpio_read)
@@ -128,7 +113,6 @@ BUILTIN_FUNCTION(raspi_gpio_read)
 
 ObjBuiltinProp raspi_funcs[] = {
   { "init",      raspi_init,       0, ATTR_DE },
-  { "end",       raspi_end,       0, ATTR_DE },
   { "gpioWrite", raspi_gpio_write, 2, ATTR_DE },
   { "gpioRead",  raspi_gpio_read,  2, ATTR_DE },
   { NULL,        NULL,             0, ATTR_DE }
