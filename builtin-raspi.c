@@ -15,7 +15,7 @@ int map_gpio()
     return -1;
   }
 
-  gpioReg = (volatile uint32_t *)mmap(
+  gpioReg = (uint32_t *)mmap(
     NULL,
     0xB4,
     PROT_READ|PROT_WRITE,
@@ -117,7 +117,7 @@ ObjBuiltinProp raspi_funcs[] = {
   { "init",      raspi_init,       0, ATTR_DE },
   { "gpioWrite", raspi_gpio_write, 2, ATTR_DE },
   { "gpioRead",  raspi_gpio_read,  2, ATTR_DE },
-  { "NULL",      NULL,             0, ATTR_DE }
+  { NULL,        NULL,             0, ATTR_DE }
 };
 
 ObjDoubleProp raspi_value[] = {
