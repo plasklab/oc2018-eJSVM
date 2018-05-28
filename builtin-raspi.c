@@ -2,6 +2,8 @@
 #define EXTERN extern
 #include "header.h"
 
+static volatile uint32_t *gpioReg = MAP_FAILED;
+
 int map_gpio()
 {
   int fd;
