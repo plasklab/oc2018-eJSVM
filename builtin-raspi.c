@@ -2,9 +2,11 @@
 #define EXTERN extern
 #include "header.h"
 
+static volatile uint32_t *gpioReg = MAP_FAILED;
+
 int map_gpio()
 {
-  int fd;
+  int fd, i;
 
   if (gpioReg != MAP_FAILED)
       return 0;
@@ -30,7 +32,7 @@ int map_gpio()
     return -1;
   }
 
-  for (int i = 0; i < 54; i++) {
+  for (i = 0; i < 54; i++) {
     printf("gpio=%d mode=%d level=%d\n", i, gpio_get_mode(i), gpio_read(i));
   }
 
@@ -92,8 +94,14 @@ BUILTIN_FUNCTION(raspi_gpio_write)
     return;
   value = (int)fixnum_to_int(v2);
 
+  printf("start gpio set mode\n");
+  fflush(stdout);
   gpio_set_mode(gpio, FSEL_OUTPUT);
+  printf("start gpio write\n");
+  fflush(stdout);
   gpio_write(gpio, value);
+  printf("end\n");
+  fflush(stdout);
 }
 
 BUILTIN_FUNCTION(raspi_gpio_read)
