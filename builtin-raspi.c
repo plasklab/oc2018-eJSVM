@@ -94,8 +94,14 @@ BUILTIN_FUNCTION(raspi_gpio_write)
     return;
   value = (int)fixnum_to_int(v2);
 
+  printf("start gpio set mode\n");
+  fflush(stdout);
   gpio_set_mode(gpio, FSEL_OUTPUT);
+  printf("start gpio write\n");
+  fflush(stdout);
   gpio_write(gpio, value);
+  printf("end\n");
+  fflush(stdout);
 }
 
 BUILTIN_FUNCTION(raspi_gpio_read)
