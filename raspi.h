@@ -34,8 +34,6 @@
 #define LOW  0
 #define HIGH 1
 
-static volatile uint32_t *gpioReg = MAP_FAILED;
-
 int map_gpio();
 void gpio_set_mode(int gpio, int mode);
 int gpio_get_mode(int gpio);
