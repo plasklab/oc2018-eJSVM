@@ -3,23 +3,55 @@
 #include "header.h"
 
 static volatile uint32_t *gpioReg = MAP_FAILED;
+static volatile uint32_t *spiReg  = MAP_FAILED;
+
+int map_spi()
+{
+  int fd;
+
+  if (spiReg != MAP_FAILED)
+      return 0;
+
+  fd = open("/dev/mem", O_RDWR|O_SYNC);
+  if(fd < 0) {
+    perror("Failed to open /dev/mem. try change permission");
+    return -1;
+  }
+
+  spiReg = (uint32_t *)mmap(
+    NULL,
+    SPI_BLOCK_SIZE,
+    PROT_READ|PROT_WRITE,
+    MAP_SHARED,
+    fd,
+    SPI_BASE
+  );
+  close(fd);
+
+  if(spiReg == MAP_FAILED) {
+    perror("spi mmap");
+    return -1;
+  }
+
+  return 0;
+}
 
 int map_gpio()
 {
-  int fd, i;
+  int fd;
 
   if (gpioReg != MAP_FAILED)
       return 0;
 
   fd = open("/dev/gpiomem", O_RDWR|O_SYNC);
   if(fd < 0) {
-    perror("Failed to open /dev/gpiomem. try change permission");
+    perror("Failed to open /dev/gpiomem.");
     return -1;
   }
 
   gpioReg = (uint32_t *)mmap(
     NULL,
-    BLOCK_SIZE,
+    GPIO_BLOCK_SIZE,
     PROT_READ|PROT_WRITE,
     MAP_SHARED,
     fd,
@@ -28,7 +60,7 @@ int map_gpio()
   close(fd);
 
   if(gpioReg == MAP_FAILED) {
-    perror("mmap");
+    perror("gpio mmap");
     return -1;
   }
 
@@ -70,6 +102,7 @@ void gpio_write(int gpio, int level)
 BUILTIN_FUNCTION(raspi_init)
 {
   map_gpio();
+  map_spi();
 }
 
 BUILTIN_FUNCTION(raspi_gpio_write)
