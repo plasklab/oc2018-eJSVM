@@ -2,7 +2,9 @@
 #define EXTERN extern
 #include "header.h"
 
-static volatile uint32_t *gpioReg = MAP_FAILED;
+static volatile uint32_t *gpioReg  = MAP_FAILED;
+static volatile uint32_t *clockReg = MAP_FAILED;
+static volatile uint32_t *pwmReg   = MAP_FAILED;
 
 int map_gpio()
 {
@@ -11,24 +13,20 @@ int map_gpio()
   if (gpioReg != MAP_FAILED)
       return 0;
 
-  fd = open("/dev/gpiomem", O_RDWR|O_SYNC);
+  fd = open("/dev/mem", O_RDWR|O_SYNC);
   if(fd < 0) {
-    perror("Failed to open /dev/gpiomem.");
+    perror("Failed to open /dev/mem.");
     return -1;
   }
 
-  gpioReg = (uint32_t *)mmap(
-    NULL,
-    GPIO_BLOCK_SIZE,
-    PROT_READ|PROT_WRITE,
-    MAP_SHARED,
-    fd,
-    GPIO_BASE
-  );
+  gpioReg  = (uint32_t *)mmap(NULL, GPIO_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE);
+  clockReg = (uint32_t *)mmap(NULL,  CLK_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, CLK_BASE);
+  pwmReg   = (uint32_t *)mmap(NULL,  PWM_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, PWM_BASE);
+
   close(fd);
 
-  if(gpioReg == MAP_FAILED) {
-    perror("gpio mmap");
+  if(gpioReg == MAP_FAILED || clockReg == MAP_FAILED || pwmReg == MAP_FAILED) {
+    perror("mmap error");
     return -1;
   }
 

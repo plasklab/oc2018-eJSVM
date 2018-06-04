@@ -1,6 +1,12 @@
 #define PERIPHERAL_BASE 0x3f000000
-#define GPIO_BASE PERIPHERAL_BASE + 0x00200000
-#define TIMER_BASE  PERIPHERAL_BASE + 0x00003000
+#define GPIO_BASE  (PERIPHERAL_BASE + 0x200000)
+#define PWM_BASE   (PERIPHERAL_BASE + 0x20C000)
+#define CLK_BASE   (PERIPHERAL_BASE + 0x101000)
+#define TIMER_BASE (PERIPHERAL_BASE + 0x003000)
+
+#define GPIO_BLOCK_SIZE 0xB4
+#define PWM_BLOCK_SIZE  0x28
+#define CLK_BLOCK_SIZE  0x08
 
 #define GPSET0 0x07
 #define GPSET1 0x08
@@ -22,8 +28,6 @@
 
 #define PI_BANK(gpio) ((gpio) >> 5)
 #define PI_BIT(gpio)  (1 << ((gpio) & 0x1F))
-
-#define GPIO_BLOCK_SIZE 0xB4
 
 int map_gpio();
 void gpio_set_mode(int gpio, int mode);
