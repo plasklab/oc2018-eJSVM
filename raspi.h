@@ -30,8 +30,8 @@
 #define PI_BIT(gpio)  (1 << ((gpio) & 0x1F))
 
 int map_gpio();
-void gpio_set_mode(int gpio, int mode);
-int gpio_get_mode(int gpio);
+void set_gpio_mode(int gpio, int mode);
+int get_gpio_mode(int gpio);
 int gpio_read(int gpio);
 void gpio_write(int gpio, int level);
 

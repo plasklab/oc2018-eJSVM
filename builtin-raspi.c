@@ -33,7 +33,7 @@ int map_gpio()
   return 0;
 }
 
-void gpio_set_mode(int gpio, int mode)
+void set_gpio_mode(int gpio, int mode)
 {
   int reg, shift;
 
@@ -43,7 +43,7 @@ void gpio_set_mode(int gpio, int mode)
   gpioReg[reg] = (gpioReg[reg] & ~(7 << shift)) | (mode << shift);
 }
 
-int gpio_get_mode(int gpio)
+int get_gpio_mode(int gpio)
 {
   int reg, shift;
 
@@ -88,7 +88,7 @@ BUILTIN_FUNCTION(raspi_gpio_write)
     return;
   value = (int)fixnum_to_int(v2);
 
-  gpio_set_mode(gpio, FSEL_OUTPUT);
+  set_gpio_mode(gpio, FSEL_OUTPUT);
   gpio_write(gpio, value);
 }
 
@@ -104,7 +104,7 @@ BUILTIN_FUNCTION(raspi_gpio_read)
     return;
   gpio = (int)fixnum_to_int(v);
 
-  gpio_set_mode(gpio, FSEL_INPUT);
+  set_gpio_mode(gpio, FSEL_INPUT);
   value = gpio_read(gpio);
   set_a(context, int_to_fixnum(value));
 }
