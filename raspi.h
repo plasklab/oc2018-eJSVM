@@ -6,7 +6,9 @@
 
 #define GPIO_BLOCK_SIZE 0xB4
 #define PWM_BLOCK_SIZE  0x28
-#define CLK_BLOCK_SIZE  0x08
+#define CLK_BLOCK_SIZE  0xA8
+
+#define CLK_PASSWD 0x5A000000
 
 #define GPSET0 0x07
 #define GPSET1 0x08
@@ -26,10 +28,20 @@
 #define FSEL_ALT4   0b011
 #define FSEL_ALT5   0b010
 
+#define CM_PWMCTL 0x28
+#define CM_PWMDIV 0x29
+
+#define PWM_RNG1 0x4
+#define PWM_DAT1 0x5
+#define PWM_RNG2 0x7
+#define PWM_DAT2 0x8
+
 #define PI_BANK(gpio) ((gpio) >> 5)
 #define PI_BIT(gpio)  (1 << ((gpio) & 0x1F))
 
 int map_gpio();
+void set_clock();
+void set_pwm();
 void set_gpio_mode(int gpio, int mode);
 int get_gpio_mode(int gpio);
 int gpio_read(int gpio);

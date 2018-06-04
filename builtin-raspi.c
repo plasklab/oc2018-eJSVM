@@ -33,6 +33,28 @@ int map_gpio()
   return 0;
 }
 
+void set_clock()
+{
+  *(clockReg + CM_PWMCTL) = CLK_PASSWD + (0x1 << 5);
+  while (*(clockReg + CM_PWMCTL) & 0x80);
+  *(clockReg + CM_PWMDIV) = CLK_PASSWD + (192 << 12); // 100kHz
+  *(clockReg + CM_PWMCTL) = CLK_PASSWD + 0x1 + (0x1 << 4);
+}
+
+void set_pwm()
+{
+  *pwmReg = 0;        // PWM1 disabled
+  *pwmReg = (0 << 8); // PWM2 disabled
+  usleep(10);
+  *pwmReg = (1 << 7) + (1 << 15);    // PWM M/S Enable
+  *(pwmReg + PWM_RNG1) = 250;        // 400Hz
+  *(pwmReg + PWM_DAT1) = (250 >> 1); // 50%
+  *(pwmReg + PWM_RNG2) = 250;        // 400Hz
+  *(pwmReg + PWM_DAT2) = (250 >> 1); // 50%
+  *pwmReg = 1;        // PWM1 enabled
+  *pwmReg = (1 << 8); // PWM2 enabled
+}
+
 void set_gpio_mode(int gpio, int mode)
 {
   int reg, shift;
@@ -68,6 +90,8 @@ void gpio_write(int gpio, int level)
 BUILTIN_FUNCTION(raspi_init)
 {
   map_gpio();
+  set_clock();
+  set_pwm();
 }
 
 BUILTIN_FUNCTION(raspi_gpio_write)
