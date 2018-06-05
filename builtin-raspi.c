@@ -11,7 +11,7 @@ int map_gpio()
   int fd;
 
   if (gpioReg != MAP_FAILED)
-      return 0;
+    return 0;
 
   fd = open("/dev/mem", O_RDWR|O_SYNC);
   if(fd < 0) {
@@ -91,10 +91,10 @@ int adc_read(int channel)
 {
   int value, i;
   if (channel < 0 || channel >= 4)
-      return -1;
-  gpio_write(8, HEIGH)
-  gpio_write(11, LOW)
-  gpio_write(8,  LOW)
+    return -1;
+  gpio_write(8, HEIGH);
+  gpio_write(11, LOW);
+  gpio_write(8,  LOW);
 
   channel |= 0x18;
   channel <<= 3;
@@ -114,9 +114,8 @@ int adc_read(int channel)
     gpio_write(11, HEIGH);
     gpio_write(11, LOW);
     value <<= 1;
-    if (i > 0 && gpio_read(9) == HEIGH) {
+    if (i > 0 && gpio_read(9) == HEIGH)
       value |= 0x1;
-    }
   }
 
   gpio_write(8, HEIGH);
