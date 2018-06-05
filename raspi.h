@@ -36,6 +36,9 @@
 #define PWM_RNG2 0x7
 #define PWM_DAT2 0x8
 
+#define HEIGH 1
+#define LOW   0
+
 #define PI_BANK(gpio) ((gpio) >> 5)
 #define PI_BIT(gpio)  (1 << ((gpio) & 0x1F))
 
@@ -45,5 +48,6 @@ void set_pwm();
 void set_gpio_mode(int gpio, int mode);
 int get_gpio_mode(int gpio);
 int gpio_read(int gpio);
+int adc_read(int channel);
 void gpio_write(int gpio, int level);
 

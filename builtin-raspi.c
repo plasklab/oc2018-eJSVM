@@ -87,6 +87,43 @@ void gpio_write(int gpio, int level)
   else            *(gpioReg + GPSET0 + PI_BANK(gpio)) = PI_BIT(gpio);
 }
 
+int adc_read(int channel)
+{
+  int value, i;
+  if (channel < 0 || channel >= 4)
+      return -1;
+  gpio_write(8, HEIGH)
+  gpio_write(11, LOW)
+  gpio_write(8,  LOW)
+
+  channel |= 0x18;
+  channel <<= 3;
+  for (i = 0; i < 5; i++) {
+    if (channel & 0x80) {
+      gpio_write(10, HEIGH);
+    } else {
+      gpio_write(10, LOW);
+    }
+    channel <<= 1;
+    gpio_write(11, HEIGH);
+    gpio_write(11, LOW);
+  }
+
+  value = 0;
+  for (i = 0; i < 13; i++) {
+    gpio_write(11, HEIGH);
+    gpio_write(11, LOW);
+    value <<= 1;
+    if (i > 0 && gpio_read(9) == HEIGH) {
+      value |= 0x1;
+    }
+  }
+
+  gpio_write(8, HEIGH);
+
+  return value;
+}
+
 BUILTIN_FUNCTION(raspi_init)
 {
   map_gpio();
