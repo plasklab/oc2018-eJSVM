@@ -48,6 +48,6 @@ void set_pwm();
 void set_gpio_mode(int gpio, int mode);
 int get_gpio_mode(int gpio);
 int gpio_read(int gpio);
-int adc_read(int channel);
+int adc_read(int adcnum, int clockpin, int mosipin, int misopin, int cspin);
 void gpio_write(int gpio, int level);
 

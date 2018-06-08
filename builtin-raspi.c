@@ -87,40 +87,46 @@ void gpio_write(int gpio, int level)
   else            *(gpioReg + GPSET0 + PI_BANK(gpio)) = PI_BIT(gpio);
 }
 
-int adc_read(int channel)
+int adc_read(int adcnum, int clockpin, int mosipin, int misopin, int cspin)
 {
-  int value, i;
-  if (channel < 0 || channel >= 4)
+  int commandout, adcout, i;
+  if (adcnum > 4 || adcnum < 0)
     return -1;
-  gpio_write(8, HEIGH);
-  gpio_write(11, LOW);
-  gpio_write(8,  LOW);
+  gpio_write(cspin, HEIGH);
+  gpio_write(clockpin, LOW);
+  usleep(5);
+  gpio_write(cspin, LOW);
 
-  channel |= 0x18;
-  channel <<= 3;
+  commandout = adcnum;
+  commandout |= 0x18;
+  commandout <<= 3;
   for (i = 0; i < 5; i++) {
-    if (channel & 0x80) {
-      gpio_write(10, HEIGH);
+    if (commandout & 0x80) {
+      gpio_write(mosipin, HEIGH);
     } else {
-      gpio_write(10, LOW);
+      gpio_write(mosipin, LOW);
     }
-    channel <<= 1;
-    gpio_write(11, HEIGH);
-    gpio_write(11, LOW);
+    commandout <<= 1;
+    gpio_write(clockpin, HEIGH);
+    usleep(5);
+    gpio_write(clockpin, LOW);
+    usleep(5);
   }
 
-  value = 0;
+  adcout = 0;
   for (i = 0; i < 13; i++) {
-    gpio_write(11, HEIGH);
-    gpio_write(11, LOW);
-    value <<= 1;
-    if (i > 0 && gpio_read(9) == HEIGH)
-      value |= 0x1;
+    gpio_write(clockpin, HEIGH);
+    usleep(5);
+    gpio_write(clockpin, LOW);
+    usleep(5);
+    adcout <<= 1;
+    if (i > 0 && gpio_read(misopin) == HEIGH)
+      adcout |= 0x1;
   }
 
-  gpio_write(8, HEIGH);
+  gpio_write(cspin, HEIGH);
 
-  return value;
+  return adcout;
 }
 
 BUILTIN_FUNCTION(raspi_init)
@@ -173,6 +179,15 @@ BUILTIN_FUNCTION(raspi_analog_read)
 {
   JSValue v;
   int channel, value;
+  int spi_clock, spi_mosi, spi_miso, spi_cs;
+  spi_clock = 11;
+  spi_mosi = 10;
+  spi_miso = 9;
+  spi_cs = 8;
+  set_gpio_mode(spi_clock, FSEL_OUTPUT);
+  set_gpio_mode(spi_mosi,  FSEL_OUTPUT);
+  set_gpio_mode(spi_miso,  FSEL_INPUT);
+  set_gpio_mode(spi_cs,    FSEL_OUTPUT);
 
   builtin_prologue();
   v = args[1];
@@ -180,7 +195,7 @@ BUILTIN_FUNCTION(raspi_analog_read)
   if (!is_fixnum(v))
     return;
   channel = (int)fixnum_to_int(v);
-  value = adc_read(channel);
+  value = adc_read(channel, spi_clock, spi_mosi, spi_miso, spi_cs);
   set_a(context, int_to_fixnum(value));
 }
 
