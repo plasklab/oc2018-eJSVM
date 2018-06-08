@@ -169,11 +169,27 @@ BUILTIN_FUNCTION(raspi_gpio_read)
   set_a(context, int_to_fixnum(value));
 }
 
+BUILTIN_FUNCTION(raspi_analog_read)
+{
+  JSValue v;
+  int channel, value;
+
+  builtin_prologue();
+  v = args[1];
+  if (!is_number(v)) v = to_number(context, v);
+  if (!is_fixnum(v))
+    return;
+  channel = (int)fixnum_to_int(v);
+  value = adc_read(channel);
+  set_a(context, int_to_fixnum(value));
+}
+
 ObjBuiltinProp raspi_funcs[] = {
-  { "init",      raspi_init,       0, ATTR_DE },
-  { "gpioWrite", raspi_gpio_write, 2, ATTR_DE },
-  { "gpioRead",  raspi_gpio_read,  2, ATTR_DE },
-  { NULL,        NULL,             0, ATTR_DE }
+  { "init",       raspi_init,        0, ATTR_DE },
+  { "gpioWrite",  raspi_gpio_write,  2, ATTR_DE },
+  { "gpioRead",   raspi_gpio_read,   1, ATTR_DE },
+  { "analogRead", raspi_analog_read, 1, ATTR_DE },
+  { NULL,         NULL,              0, ATTR_DE }
 };
 
 ObjDoubleProp raspi_value[] = {
