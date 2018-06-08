@@ -43,16 +43,16 @@ void set_clock()
 
 void set_pwm()
 {
-  *pwmReg = 0;        // PWM1 disabled
-  *pwmReg = (0 << 8); // PWM2 disabled
+  *pwmReg &= (int) 0x0; // PWM disabled
   usleep(10);
-  *pwmReg = (1 << 7) + (1 << 15);    // PWM M/S Enable
-  *(pwmReg + PWM_RNG1) = 250;        // 400Hz
-  *(pwmReg + PWM_DAT1) = (250 >> 1); // 50%
-  *(pwmReg + PWM_RNG2) = 250;        // 400Hz
-  *(pwmReg + PWM_DAT2) = (250 >> 1); // 50%
-  *pwmReg = 1;        // PWM1 enabled
-  *pwmReg = (1 << 8); // PWM2 enabled
+
+  *pwmReg = (0x1 << 7) + (0x1 << 15); // PWM M/S Enable
+  *(pwmReg + PWM_RNG1) = 250;         // 400Hz
+  *(pwmReg + PWM_DAT1) = (250 >> 1);  // 50%
+  *(pwmReg + PWM_RNG2) = 250;         // 400Hz
+  *(pwmReg + PWM_DAT2) = (250 >> 1);  // 50%
+
+  *pwmReg = 0x1 + (0x1 << 8); // PWM enabled
 }
 
 void set_gpio_mode(int gpio, int mode)
