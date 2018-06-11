@@ -19,9 +19,9 @@ int map_gpio()
     return -1;
   }
 
-  gpioReg  = (uint32_t *)mmap(NULL, GPIO_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE);
-  clockReg = (uint32_t *)mmap(NULL,  CLK_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, CLK_BASE);
-  pwmReg   = (uint32_t *)mmap(NULL,  PWM_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, PWM_BASE);
+  gpioReg  = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE);
+  clockReg = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, CLK_BASE);
+  pwmReg   = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, PWM_BASE);
 
   close(fd);
 
@@ -35,24 +35,39 @@ int map_gpio()
 
 void set_clock()
 {
-  *(clockReg + CM_PWMCTL) = CLK_PASSWD + (0x1 << 5);
-  while (*(clockReg + CM_PWMCTL) & 0x80);
-  *(clockReg + CM_PWMDIV) = CLK_PASSWD + (192 << 12); // 100kHz
-  *(clockReg + CM_PWMCTL) = CLK_PASSWD + 0x1 + (0x1 << 4);
+  uint32_t pwm_control = *pwmReg;
+  *pwmReg = 0;
+  *(clockReg + CM_PWMCTL) = (CLK_PASSWD | 0x01);
+  usleep(110);
+  while (*(clockReg + CM_PWMCTL) & 0x80)
+    usleep(1);
+  *(clockReg + CM_PWMDIV) = (CLK_PASSWD | (32 << 12)); // 9.6MHz
+  *(clockReg + CM_PWMCTL) = (CLK_PASSWD | 0x11);
+  *pwmReg = pwm_control;
+  // printf("clockReg + CM_PWMCTL: 0x%x\n", *(clockReg + CM_PWMCTL));
+  // printf("clockReg + CM_PWMDIV: 0x%x\n", *(clockReg + CM_PWMDIV));
 }
 
 void set_pwm()
 {
   *pwmReg &= (int) 0x0; // PWM disabled
+  *(pwmReg + 0x07) = 0;         // 400Hz
   usleep(10);
+  // printf("before pwmReg: 0x%x\n", *pwmReg);
 
-  *pwmReg = (0x1 << 7) + (0x1 << 15); // PWM M/S Enable
-  *(pwmReg + PWM_RNG1) = 250;         // 400Hz
-  *(pwmReg + PWM_DAT1) = (250 >> 1);  // 50%
-  *(pwmReg + PWM_RNG2) = 250;         // 400Hz
-  *(pwmReg + PWM_DAT2) = (250 >> 1);  // 50%
+  *(pwmReg + PWM_RNG1) = 1024;         // 400Hz
+  *(pwmReg + PWM_DAT1) = (1024 >> 1);  // 50%
+  *(pwmReg + PWM_RNG2) = 1024;         // 400Hz
+  *(pwmReg + PWM_DAT2) = (1024 >> 1);  // 50%
+  
+  *pwmReg |= (0x1 << 7); // PWM M/S Enable
+  *pwmReg |= 0x1; // PWM enabled
 
-  *pwmReg = 0x1 + (0x1 << 8); // PWM enabled
+
+  *pwmReg |= (0x1 << 15); // PWM M/S Enable
+  *pwmReg |= (0x1 << 8); // PWM enabled
+
+  // printf("after  pwmReg: 0x%x\n", *pwmReg);
 }
 
 void set_pulse_motor()
@@ -73,9 +88,9 @@ void set_pulse_motor()
   set_gpio_mode(rotation_l_pin, FSEL_OUTPUT);
   set_gpio_mode(rotation_r_pin, FSEL_OUTPUT);
 
+  gpio_write(rotation_l_pin, LOW);
+  gpio_write(rotation_r_pin, HEIGH);
   gpio_write(power_pin, LOW);
-  gpio_write(rotation_l_pin, HEIGH);
-  gpio_write(rotation_r_pin, LOW);
 }
 
 void set_gpio_mode(int gpio, int mode)
@@ -155,9 +170,9 @@ int adc_read(int adcnum, int clockpin, int mosipin, int misopin, int cspin)
 BUILTIN_FUNCTION(raspi_init)
 {
   map_gpio();
-  set_clock();
-  set_pwm();
   set_pulse_motor();
+  set_pwm();
+  set_clock();
 }
 
 BUILTIN_FUNCTION(raspi_gpio_write)

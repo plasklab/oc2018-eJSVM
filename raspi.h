@@ -4,9 +4,7 @@
 #define CLK_BASE   (PERIPHERAL_BASE + 0x101000)
 #define TIMER_BASE (PERIPHERAL_BASE + 0x003000)
 
-#define GPIO_BLOCK_SIZE 0xB4
-#define PWM_BLOCK_SIZE  0x28
-#define CLK_BLOCK_SIZE  0xA8
+#define BLOCK_SIZE  (4*1024)
 
 #define CLK_PASSWD 0x5A000000
 
@@ -33,8 +31,8 @@
 
 #define PWM_RNG1 0x4
 #define PWM_DAT1 0x5
-#define PWM_RNG2 0x7
-#define PWM_DAT2 0x8
+#define PWM_RNG2 0x8
+#define PWM_DAT2 0x9
 
 #define HEIGH 1
 #define LOW   0
