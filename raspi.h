@@ -40,6 +40,11 @@
 #define PI_BANK(gpio) ((gpio) >> 5)
 #define PI_BIT(gpio)  (1 << ((gpio) & 0x1F))
 
+#define PWM1_ENABLE 0x1
+#define PWM2_ENABLE (0x1 << 8)
+#define PWM1_MS_MODE (0x1 << 7)
+#define PWM2_MS_MODE (0x1 << 15)
+
 int map_gpio();
 void set_clock();
 void set_pwm();

@@ -2,30 +2,30 @@
 #define EXTERN extern
 #include "header.h"
 
-static volatile uint32_t *gpioReg  = MAP_FAILED;
-static volatile uint32_t *clockReg = MAP_FAILED;
-static volatile uint32_t *pwmReg   = MAP_FAILED;
+static volatile uint32_t *gpio  = MAP_FAILED;
+static volatile uint32_t *clock = MAP_FAILED;
+static volatile uint32_t *pwm   = MAP_FAILED;
 
 int map_gpio()
 {
   int fd;
 
-  if (gpioReg != MAP_FAILED)
+  if (gpio != MAP_FAILED)
     return 0;
 
   fd = open("/dev/mem", O_RDWR|O_SYNC);
   if(fd < 0) {
-    perror("Failed to open /dev/mem.");
+    perror("Failed to open /dev/mem. Try running with sudo?\n");
     return -1;
   }
 
-  gpioReg  = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE);
-  clockReg = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, CLK_BASE);
-  pwmReg   = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, PWM_BASE);
+  gpio  = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE);
+  clock = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, CLK_BASE);
+  pwm   = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, PWM_BASE);
 
   close(fd);
 
-  if(gpioReg == MAP_FAILED || clockReg == MAP_FAILED || pwmReg == MAP_FAILED) {
+  if(gpio == MAP_FAILED || clock == MAP_FAILED || pwm == MAP_FAILED) {
     perror("mmap error");
     return -1;
   }
@@ -35,39 +35,36 @@ int map_gpio()
 
 void set_clock()
 {
-  uint32_t pwm_control = *pwmReg;
-  *pwmReg = 0;
-  *(clockReg + CM_PWMCTL) = (CLK_PASSWD | 0x01);
+  // preserve PWM_CONTROL
+  uint32_t pwm_control = *pwm;
+
+  *pwm = 0; 								  // Stop PWM
+  *(clock + CM_PWMCTL) = (CLK_PASSWD | 0x01); // Stop PWM Clock
   usleep(110);
-  while (*(clockReg + CM_PWMCTL) & 0x80)
+
+  // Wait for clock to be !BUSY
+  while (*(clock + CM_PWMCTL) & 0x80)
     usleep(1);
-  *(clockReg + CM_PWMDIV) = (CLK_PASSWD | (32 << 12)); // 9.6MHz
-  *(clockReg + CM_PWMCTL) = (CLK_PASSWD | 0x11);
-  *pwmReg = pwm_control;
-  // printf("clockReg + CM_PWMCTL: 0x%x\n", *(clockReg + CM_PWMCTL));
-  // printf("clockReg + CM_PWMDIV: 0x%x\n", *(clockReg + CM_PWMDIV));
+
+  *(clock + CM_PWMDIV) = (CLK_PASSWD | (32 << 12)); // PWM Set a 600kHz
+  *(clock + CM_PWMCTL) = (CLK_PASSWD | 0x11);   	// Start PWM Clock
+  *pwm = pwm_control;   							// restore PWM_CONTROL
 }
 
 void set_pwm()
 {
-  *pwmReg &= (int) 0x0; // PWM disabled
-  *(pwmReg + 0x07) = 0;         // 400Hz
+  // PWM disabled
+  *pwm &= (int) 0x0;
   usleep(10);
-  // printf("before pwmReg: 0x%x\n", *pwmReg);
 
-  *(pwmReg + PWM_RNG1) = 1024;         // 400Hz
-  *(pwmReg + PWM_DAT1) = (1024 >> 1);  // 50%
-  *(pwmReg + PWM_RNG2) = 1024;         // 400Hz
-  *(pwmReg + PWM_DAT2) = (1024 >> 1);  // 50%
-  
-  *pwmReg |= (0x1 << 7); // PWM M/S Enable
-  *pwmReg |= 0x1; // PWM enabled
+  // Set Range 1024 and Duty Cycle 50%
+  *(pwm + PWM_RNG1) = 1024;
+  *(pwm + PWM_RNG2) = 1024;
+  *(pwm + PWM_DAT1) = 512;
+  *(pwm + PWM_DAT2) = 512;
 
-
-  *pwmReg |= (0x1 << 15); // PWM M/S Enable
-  *pwmReg |= (0x1 << 8); // PWM enabled
-
-  // printf("after  pwmReg: 0x%x\n", *pwmReg);
+  // PWM M/S mode and PWM Enable
+  *pwm = PWM1_ENABLE | PWM2_ENABLE | PWM1_MS_MODE | PWM2_MS_MODE;
 }
 
 void set_pulse_motor()
@@ -100,7 +97,7 @@ void set_gpio_mode(int gpio, int mode)
   reg = gpio / 10;
   shift = (gpio % 10) * 3;
 
-  gpioReg[reg] = (gpioReg[reg] & ~(7 << shift)) | (mode << shift);
+  gpio[reg] = (gpio[reg] & ~(7 << shift)) | (mode << shift);
 }
 
 int get_gpio_mode(int gpio)
@@ -110,19 +107,19 @@ int get_gpio_mode(int gpio)
   reg = gpio / 10;
   shift = (gpio % 10) * 3;
 
-  return (*(gpioReg + reg) >> shift) & 7;
+  return (*(gpio + reg) >> shift) & 7;
 }
 
 int gpio_read(int gpio)
 {
-  if ((*(gpioReg + GPLEV0 + PI_BANK(gpio)) & PI_BIT(gpio)) != 0) return 1;
-  else                                                           return 0;
+  if ((*(gpio + GPLEV0 + PI_BANK(gpio)) & PI_BIT(gpio)) != 0) return 1;
+  else                                                        return 0;
 }
 
 void gpio_write(int gpio, int level)
 {
-  if (level == 0) *(gpioReg + GPCLR0 + PI_BANK(gpio)) = PI_BIT(gpio);
-  else            *(gpioReg + GPSET0 + PI_BANK(gpio)) = PI_BIT(gpio);
+  if (level == 0) *(gpio + GPCLR0 + PI_BANK(gpio)) = PI_BIT(gpio);
+  else            *(gpio + GPSET0 + PI_BANK(gpio)) = PI_BIT(gpio);
 }
 
 int adc_read(int adcnum, int clockpin, int mosipin, int misopin, int cspin)
