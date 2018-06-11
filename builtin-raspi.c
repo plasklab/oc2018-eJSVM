@@ -129,7 +129,7 @@ int adc_read(int adcnum, int clkpin, int mosipin, int misopin, int cspin)
     return -1;
   gpio_write(cspin, HEIGH);
   gpio_write(clkpin, LOW);
-  usleep(5);
+  usleep(1);
   gpio_write(cspin, LOW);
 
   commandout = adcnum;
@@ -143,17 +143,17 @@ int adc_read(int adcnum, int clkpin, int mosipin, int misopin, int cspin)
     }
     commandout <<= 1;
     gpio_write(clkpin, HEIGH);
-    usleep(5);
+    usleep(1);
     gpio_write(clkpin, LOW);
-    usleep(5);
+    usleep(1);
   }
 
   adcout = 0;
   for (i = 0; i < 13; i++) {
     gpio_write(clkpin, HEIGH);
-    usleep(5);
+    usleep(1);
     gpio_write(clkpin, LOW);
-    usleep(5);
+    usleep(1);
     adcout <<= 1;
     if (i > 0 && gpio_read(misopin) == HEIGH)
       adcout |= 0x1;
