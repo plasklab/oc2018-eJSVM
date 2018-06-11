@@ -55,6 +55,29 @@ void set_pwm()
   *pwmReg = 0x1 + (0x1 << 8); // PWM enabled
 }
 
+void set_pulse_motor()
+{
+  int power_pin;
+  int clock_r_pin, clock_l_pin;
+  int rotation_r_pin, rotation_l_pin;
+
+  power_pin = 5;
+  clock_l_pin = 12;
+  clock_r_pin = 13;
+  rotation_l_pin = 16;
+  rotation_r_pin = 6;
+
+  set_gpio_mode(power_pin, FSEL_OUTPUT);
+  set_gpio_mode(clock_l_pin, FSEL_ALT0);
+  set_gpio_mode(clock_r_pin, FSEL_ALT0);
+  set_gpio_mode(rotation_l_pin, FSEL_OUTPUT);
+  set_gpio_mode(rotation_r_pin, FSEL_OUTPUT);
+
+  gpio_write(power_pin, LOW);
+  gpio_write(rotation_l_pin, HEIGH);
+  gpio_write(rotation_r_pin, LOW);
+}
+
 void set_gpio_mode(int gpio, int mode)
 {
   int reg, shift;
@@ -134,6 +157,7 @@ BUILTIN_FUNCTION(raspi_init)
   map_gpio();
   set_clock();
   set_pwm();
+  set_pulse_motor();
 }
 
 BUILTIN_FUNCTION(raspi_gpio_write)
