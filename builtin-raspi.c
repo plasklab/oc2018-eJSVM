@@ -38,7 +38,7 @@ void set_clock()
   // preserve PWM_CONTROL
   uint32_t pwm_control = *pwm;
 
-  *pwm = 0; 								  // Stop PWM
+  *pwm = 0;                                   // Stop PWM
   *(clock + CM_PWMCTL) = (CLK_PASSWD | 0x01); // Stop PWM Clock
   usleep(110);
 
@@ -47,8 +47,8 @@ void set_clock()
     usleep(1);
 
   *(clock + CM_PWMDIV) = (CLK_PASSWD | (32 << 12)); // PWM Set a 600kHz
-  *(clock + CM_PWMCTL) = (CLK_PASSWD | 0x11);   	// Start PWM Clock
-  *pwm = pwm_control;   							// restore PWM_CONTROL
+  *(clock + CM_PWMCTL) = (CLK_PASSWD | 0x11);       // Start PWM Clock
+  *pwm = pwm_control;                               // restore PWM_CONTROL
 }
 
 void set_pwm()
