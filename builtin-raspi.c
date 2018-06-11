@@ -2,9 +2,9 @@
 #define EXTERN extern
 #include "header.h"
 
-static volatile uint32_t *gpio  = MAP_FAILED;
-static volatile uint32_t *clock = MAP_FAILED;
-static volatile uint32_t *pwm   = MAP_FAILED;
+static volatile uint32_t *gpio = MAP_FAILED;
+static volatile uint32_t *clk  = MAP_FAILED;
+static volatile uint32_t *pwm  = MAP_FAILED;
 
 int map_gpio()
 {
@@ -19,36 +19,36 @@ int map_gpio()
     return -1;
   }
 
-  gpio  = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE);
-  clock = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, CLK_BASE);
-  pwm   = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, PWM_BASE);
+  gpio = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE);
+  clk  = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, CLK_BASE);
+  pwm  = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, PWM_BASE);
 
   close(fd);
 
-  if(gpio == MAP_FAILED || clock == MAP_FAILED || pwm == MAP_FAILED) {
-    perror("mmap error");
+  if(gpio == MAP_FAILED || clk == MAP_FAILED || pwm == MAP_FAILED) {
+    perror("mmap error\n");
     return -1;
   }
 
   return 0;
 }
 
-void set_clock()
+void set_clk()
 {
   // preserve PWM_CONTROL
   uint32_t pwm_control = *pwm;
 
-  *pwm = 0;                                   // Stop PWM
-  *(clock + CM_PWMCTL) = (CLK_PASSWD | 0x01); // Stop PWM Clock
+  *pwm = 0;                                 // Stop PWM
+  *(clk + CM_PWMCTL) = (CLK_PASSWD | 0x01); // Stop PWM Clock
   usleep(110);
 
-  // Wait for clock to be !BUSY
-  while (*(clock + CM_PWMCTL) & 0x80)
+  // Wait for clk to be !BUSY
+  while (*(clk + CM_PWMCTL) & 0x80)
     usleep(1);
 
-  *(clock + CM_PWMDIV) = (CLK_PASSWD | (32 << 12)); // PWM Set a 600kHz
-  *(clock + CM_PWMCTL) = (CLK_PASSWD | 0x11);       // Start PWM Clock
-  *pwm = pwm_control;                               // restore PWM_CONTROL
+  *(clk + CM_PWMDIV) = (CLK_PASSWD | (32 << 12)); // PWM Set a 600kHz
+  *(clk + CM_PWMCTL) = (CLK_PASSWD | 0x11);       // Start PWM Clock
+  *pwm = pwm_control;                             // restore PWM_CONTROL
 }
 
 void set_pwm()
@@ -70,18 +70,18 @@ void set_pwm()
 void set_pulse_motor()
 {
   int power_pin;
-  int clock_r_pin, clock_l_pin;
+  int clk_r_pin, clk_l_pin;
   int rotation_r_pin, rotation_l_pin;
 
   power_pin = 5;
-  clock_l_pin = 12;
-  clock_r_pin = 13;
+  clk_l_pin = 12;
+  clk_r_pin = 13;
   rotation_l_pin = 16;
   rotation_r_pin = 6;
 
   set_gpio_mode(power_pin, FSEL_OUTPUT);
-  set_gpio_mode(clock_l_pin, FSEL_ALT0);
-  set_gpio_mode(clock_r_pin, FSEL_ALT0);
+  set_gpio_mode(clk_l_pin, FSEL_ALT0);
+  set_gpio_mode(clk_r_pin, FSEL_ALT0);
   set_gpio_mode(rotation_l_pin, FSEL_OUTPUT);
   set_gpio_mode(rotation_r_pin, FSEL_OUTPUT);
 
@@ -90,45 +90,45 @@ void set_pulse_motor()
   gpio_write(power_pin, LOW);
 }
 
-void set_gpio_mode(int gpio, int mode)
+void set_gpio_mode(int gpio_pin, int mode)
 {
   int reg, shift;
 
-  reg = gpio / 10;
-  shift = (gpio % 10) * 3;
+  reg = gpio_pin / 10;
+  shift = (gpio_pin % 10) * 3;
 
   gpio[reg] = (gpio[reg] & ~(7 << shift)) | (mode << shift);
 }
 
-int get_gpio_mode(int gpio)
+int get_gpio_mode(int gpio_pin)
 {
   int reg, shift;
 
-  reg = gpio / 10;
-  shift = (gpio % 10) * 3;
+  reg = gpio_pin / 10;
+  shift = (gpio_pin % 10) * 3;
 
   return (*(gpio + reg) >> shift) & 7;
 }
 
-int gpio_read(int gpio)
+int gpio_read(int gpio_pin)
 {
-  if ((*(gpio + GPLEV0 + PI_BANK(gpio)) & PI_BIT(gpio)) != 0) return 1;
-  else                                                        return 0;
+  if ((*(gpio + GPLEV0 + PI_BANK(gpio_pin)) & PI_BIT(gpio_pin)) != 0) return 1;
+  else                                                                return 0;
 }
 
-void gpio_write(int gpio, int level)
+void gpio_write(int gpio_pin, int level)
 {
-  if (level == 0) *(gpio + GPCLR0 + PI_BANK(gpio)) = PI_BIT(gpio);
-  else            *(gpio + GPSET0 + PI_BANK(gpio)) = PI_BIT(gpio);
+  if (level == 0) *(gpio + GPCLR0 + PI_BANK(gpio_pin)) = PI_BIT(gpio_pin);
+  else            *(gpio + GPSET0 + PI_BANK(gpio_pin)) = PI_BIT(gpio_pin);
 }
 
-int adc_read(int adcnum, int clockpin, int mosipin, int misopin, int cspin)
+int adc_read(int adcnum, int clkpin, int mosipin, int misopin, int cspin)
 {
   int commandout, adcout, i;
   if (adcnum > 4 || adcnum < 0)
     return -1;
   gpio_write(cspin, HEIGH);
-  gpio_write(clockpin, LOW);
+  gpio_write(clkpin, LOW);
   usleep(5);
   gpio_write(cspin, LOW);
 
@@ -142,17 +142,17 @@ int adc_read(int adcnum, int clockpin, int mosipin, int misopin, int cspin)
       gpio_write(mosipin, LOW);
     }
     commandout <<= 1;
-    gpio_write(clockpin, HEIGH);
+    gpio_write(clkpin, HEIGH);
     usleep(5);
-    gpio_write(clockpin, LOW);
+    gpio_write(clkpin, LOW);
     usleep(5);
   }
 
   adcout = 0;
   for (i = 0; i < 13; i++) {
-    gpio_write(clockpin, HEIGH);
+    gpio_write(clkpin, HEIGH);
     usleep(5);
-    gpio_write(clockpin, LOW);
+    gpio_write(clkpin, LOW);
     usleep(5);
     adcout <<= 1;
     if (i > 0 && gpio_read(misopin) == HEIGH)
@@ -169,20 +169,20 @@ BUILTIN_FUNCTION(raspi_init)
   map_gpio();
   set_pulse_motor();
   set_pwm();
-  set_clock();
+  set_clk();
 }
 
 BUILTIN_FUNCTION(raspi_gpio_write)
 {
   JSValue v1, v2;
-  int gpio, value;
+  int gpio_pin, value;
 
   builtin_prologue();
   v1 = args[1];
   if (!is_number(v1)) v1 = to_number(context, v1);
   if (!is_fixnum(v1))
     return;
-  gpio = (int)fixnum_to_int(v1);
+  gpio_pin = (int)fixnum_to_int(v1);
 
   v2 = args[2];
   if (!is_number(v2)) v2 = to_number(context, v2);
@@ -190,24 +190,24 @@ BUILTIN_FUNCTION(raspi_gpio_write)
     return;
   value = (int)fixnum_to_int(v2);
 
-  set_gpio_mode(gpio, FSEL_OUTPUT);
-  gpio_write(gpio, value);
+  set_gpio_mode(gpio_pin, FSEL_OUTPUT);
+  gpio_write(gpio_pin, value);
 }
 
 BUILTIN_FUNCTION(raspi_gpio_read)
 {
   JSValue v;
-  int gpio, value;
+  int gpio_pin, value;
 
   builtin_prologue();
   v = args[1];
   if (!is_number(v)) v = to_number(context, v);
   if (!is_fixnum(v))
     return;
-  gpio = (int)fixnum_to_int(v);
+  gpio_pin = (int)fixnum_to_int(v);
 
-  set_gpio_mode(gpio, FSEL_INPUT);
-  value = gpio_read(gpio);
+  set_gpio_mode(gpio_pin, FSEL_INPUT);
+  value = gpio_read(gpio_pin);
   set_a(context, int_to_fixnum(value));
 }
 
@@ -215,15 +215,15 @@ BUILTIN_FUNCTION(raspi_analog_read)
 {
   JSValue v;
   int channel, value;
-  int spi_clock, spi_mosi, spi_miso, spi_cs;
-  spi_clock = 11;
+  int spi_clk, spi_mosi, spi_miso, spi_cs;
+  spi_clk = 11;
   spi_mosi = 10;
   spi_miso = 9;
   spi_cs = 8;
-  set_gpio_mode(spi_clock, FSEL_OUTPUT);
-  set_gpio_mode(spi_mosi,  FSEL_OUTPUT);
-  set_gpio_mode(spi_miso,  FSEL_INPUT);
-  set_gpio_mode(spi_cs,    FSEL_OUTPUT);
+  set_gpio_mode(spi_clk,  FSEL_OUTPUT);
+  set_gpio_mode(spi_mosi, FSEL_OUTPUT);
+  set_gpio_mode(spi_miso, FSEL_INPUT);
+  set_gpio_mode(spi_cs,   FSEL_OUTPUT);
 
   builtin_prologue();
   v = args[1];
@@ -231,7 +231,7 @@ BUILTIN_FUNCTION(raspi_analog_read)
   if (!is_fixnum(v))
     return;
   channel = (int)fixnum_to_int(v);
-  value = adc_read(channel, spi_clock, spi_mosi, spi_miso, spi_cs);
+  value = adc_read(channel, spi_clk, spi_mosi, spi_miso, spi_cs);
   set_a(context, int_to_fixnum(value));
 }
 
