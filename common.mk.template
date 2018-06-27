@@ -49,6 +49,7 @@ HFILES = $(GENERATED_HFILES) \
          context.h \
          header.h \
 	 builtin.h \
+   raspi.h \
 	 hash.h \
 	 instructions.h \
 	 types.h \
@@ -66,13 +67,14 @@ OFILES = allocate.o \
          builtin-object.o \
          builtin-regexp.o \
          builtin-string.o \
+         builtin-raspi.o \
          call.o \
          codeloader.o \
          context.o \
          conversion.o \
          hash.o \
          init.o \
-	 string.o \
+         string.o \
          object.o \
          operations.o \
          vmloop.o \
