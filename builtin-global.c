@@ -245,6 +245,7 @@ ObjGconstsProp global_gconsts_props[] = {
   { "Infinity",  &gconsts.g_flonum_infinity, ATTR_DDDE },
   { "Math",      &gconsts.g_math,            ATTR_DE   },
   { "Raspi",     &gconsts.g_raspi,           ATTR_DE   },
+  { "Time",      &gconsts.g_time,            ATTR_DE   },
   { NULL,        NULL,                       ATTR_DE   }
 };
 
