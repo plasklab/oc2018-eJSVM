@@ -111,6 +111,6 @@ $ sudo reboot   # １回再起動する
   ```
   $ cd /path/to/ejsc
   $ java -jar newejsc.jar /path/to/blink.js
-  $ /path/to/ejsvm/build/ejsvm /path/to/blink.sbc
+  $ sudo /path/to/ejsvm/build/ejsvm /path/to/blink.sbc
   ```
 
