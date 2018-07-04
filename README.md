@@ -36,10 +36,10 @@ $ sudo reboot   # １回再起動する
   $ sudo apt-get install vim -y
   $ sudo apt-get install git -y
   $ sudo apt-get install ant -y
+  $ sudo apt-get install openjdk-8-jdk -y
   $ sudo apt-get install ruby -y
   $ sudo apt-get install ruby-dev -y
   $ sudo apt-get install libonig-dev -y
-  $ sudo apt-get install openjdk-8-jdk -y
   $ sudo reboot # とりあえず再起動
   ```
 #### eJSのインストール
