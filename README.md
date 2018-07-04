@@ -87,6 +87,7 @@ $ sudo reboot   # １回再起動する
   CFLAGS=-DNDEBUG -UDEBUG -O3
   include ../common.mk
   ```
+  makeする
 
 
 ## Lチカ
@@ -110,6 +111,6 @@ $ sudo reboot   # １回再起動する
   ```
   $ cd /path/to/ejsc
   $ java -jar newejsc.jar /path/to/blink.js
-  $ ../ejsvm/build/ejsvm blink.sbc
+  $ /path/to/ejsvm/build/ejsvm /path/to/blink.sbc
   ```
 
