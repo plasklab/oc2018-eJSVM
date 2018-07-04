@@ -70,9 +70,9 @@ $ sudo reboot   # １回再起動する
   cd ejsvm
   cp common.mk.template common.mk
   vim common.mk
-  - 以下を変更する(Rasbianの場合)
-    - CC clang -> CC gcc
-    - SED gsed -> SED sed
+  - 以下を変更する
+    - CC = clang -> CC gcc
+    - SED = gsed -> SED sed
   mkdir build
   cd build
   vim Makefile
