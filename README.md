@@ -70,10 +70,9 @@ $ sudo reboot   # １回再起動する
   cd ejsvm
   cp common.mk.template common.mk
   vim common.mk
-    - INCLUDES
-    - LIBS
-    - SED
-    - RUBY
+  - 以下を変更する(Rasbianの場合)
+    - CC clang -> CC gcc
+    - SED gsed -> SED sed
   mkdir build
   cd build
   vim Makefile
@@ -100,16 +99,10 @@ $ sudo reboot   # １回再起動する
 
   for (var k = 0; k < 10; k++) {
       Raspi.gpioWrite(LED_GPIO, 1); // LED ON
-
-      // 適当なdelay
-      for(var i = 0; i < 1000; i++)
-          for(var j = 0; j < 1000; j++);
+      Time.delay(1000);
 
       Raspi.gpioWrite(LED_GPIO, 0); // LED OFF
-
-      // 適当なdelayをかける
-      for(var i = 0; i < 1000; i++)
-          for(var j = 0; j < 1000; j++);
+      Time.delay(1000);
   }
   ```
 
