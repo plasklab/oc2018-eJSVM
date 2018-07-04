@@ -81,6 +81,7 @@ void init_global_objects(void) {
   gconsts.g_global = new_big_predef_object(NULL);
   gconsts.g_math = new_big_predef_object(NULL);
   gconsts.g_raspi = new_big_predef_object(NULL);
+  gconsts.g_time = new_big_predef_object(NULL);
 
 #ifdef HIDDEN_CLASS
 #ifdef HIDDEN_DEBUG
@@ -88,6 +89,7 @@ void init_global_objects(void) {
   print_hidden_class("g_global", obj_hidden_class(gconsts.g_global));
   print_hidden_class("g_math", obj_hidden_class(gconsts.g_math));
   print_hidden_class("g_raspi", obj_hidden_class(gconsts.g_raspi));
+  print_hidden_class("g_time", obj_hidden_class(gconsts.g_time));
 #endif
 #endif
 
@@ -103,6 +105,7 @@ void init_builtin(Context *ctx) {
   init_builtin_string(ctx);
   init_builtin_boolean(ctx);
   init_builtin_raspi(ctx);
+  init_builtin_time(ctx);
 #ifdef need_flonum
   init_builtin_math(ctx);
 #endif /* need_flonum */
