@@ -235,11 +235,71 @@ BUILTIN_FUNCTION(raspi_analog_read)
   set_a(context, int_to_fixnum(value));
 }
 
+BUILTIN_FUNCTION(raspi_front_moter)
+{
+  int power_pin;
+  int rotation_r_pin, rotation_l_pin;
+
+  power_pin = 5;
+  rotation_l_pin = 16;
+  rotation_r_pin = 6;
+
+  gpio_write(rotation_l_pin, LOW);
+  gpio_write(rotation_r_pin, HEIGH);
+  gpio_write(power_pin, LOW);
+}
+
+BUILTIN_FUNCTION(raspi_right_moter)
+{
+  int power_pin;
+  int rotation_r_pin, rotation_l_pin;
+
+  power_pin = 5;
+  rotation_l_pin = 16;
+  rotation_r_pin = 6;
+
+  gpio_write(rotation_l_pin, LOW);
+  gpio_write(rotation_r_pin, LOW);
+  gpio_write(power_pin, LOW);
+}
+
+BUILTIN_FUNCTION(raspi_left_moter)
+{
+  int power_pin;
+  int rotation_r_pin, rotation_l_pin;
+
+  power_pin = 5;
+  rotation_l_pin = 16;
+  rotation_r_pin = 6;
+
+  gpio_write(rotation_l_pin, HEIGH);
+  gpio_write(rotation_r_pin, HEIGH);
+  gpio_write(power_pin, LOW);
+}
+
+BUILTIN_FUNCTION(raspi_stop_moter)
+{
+  int power_pin;
+  int rotation_r_pin, rotation_l_pin;
+
+  power_pin = 5;
+  rotation_l_pin = 16;
+  rotation_r_pin = 6;
+
+  gpio_write(rotation_l_pin, LOW);
+  gpio_write(rotation_r_pin, HEIGH);
+  gpio_write(power_pin, LOW);
+}
+
 ObjBuiltinProp raspi_funcs[] = {
   { "init",       raspi_init,        0, ATTR_DE },
   { "gpioWrite",  raspi_gpio_write,  2, ATTR_DE },
   { "gpioRead",   raspi_gpio_read,   1, ATTR_DE },
   { "analogRead", raspi_analog_read, 1, ATTR_DE },
+  { "frontMoter", raspi_front_moter, 0, ATTR_DE },
+  { "rigthMoter", raspi_right_moter, 0, ATTR_DE },
+  { "leftMoter",  raspi_left_moter,  0, ATTR_DE },
+  { "stopMoter",  raspi_stop_moter,  0, ATTR_DE },
   { NULL,         NULL,              0, ATTR_DE }
 };
 
