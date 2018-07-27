@@ -45,11 +45,11 @@ BUILTIN_FUNCTION(builtin_time_clock)
   set_a(context, double_to_flonum(t));
 }
 
-BUILTIN_FUNCTION(builtin_time_get_sec_monotonic)
+BUILTIN_FUNCTION(builtin_time_sec_realtime)
 {
   builtin_prologue();
   struct timespec ts;
-  if (clock_gettime(CLOCK_MONOTONIC, &ts)) {
+  if (clock_gettime(CLOCK_REALTIME, &ts)) {
     set_a(context, JS_UNDEFINED);
     return;
   }
@@ -58,7 +58,7 @@ BUILTIN_FUNCTION(builtin_time_get_sec_monotonic)
   set_a(context, double_to_flonum(t));
 }
 
-BUILTIN_FUNCTION(builtin_time_get_msec_monotonic)
+BUILTIN_FUNCTION(builtin_time_msec_realtime)
 {
   builtin_prologue();
   struct timespec ts;
@@ -71,11 +71,11 @@ BUILTIN_FUNCTION(builtin_time_get_msec_monotonic)
   set_a(context, double_to_flonum(t));
 }
 
-BUILTIN_FUNCTION(builtin_time_get_usec_monotonic)
+BUILTIN_FUNCTION(builtin_time_usec_realtime)
 {
   builtin_prologue();
   struct timespec ts;
-  if (clock_gettime(CLOCK_MONOTONIC, &ts)) {
+  if (clock_gettime(CLOCK_REALTIME, &ts)) {
     set_a(context, JS_UNDEFINED);
     return;
   }
@@ -84,11 +84,11 @@ BUILTIN_FUNCTION(builtin_time_get_usec_monotonic)
   set_a(context, double_to_flonum(t));
 }
 
-BUILTIN_FUNCTION(builtin_time_get_nsec_monotonic)
+BUILTIN_FUNCTION(builtin_time_nsec_realtime)
 {
   builtin_prologue();
   struct timespec ts;
-  if (clock_gettime(CLOCK_MONOTONIC, &ts)) {
+  if (clock_gettime(CLOCK_REALTIME, &ts)) {
     set_a(context, JS_UNDEFINED);
     return;
   }
@@ -101,10 +101,10 @@ ObjBuiltinProp time_funcs[] = {
   { "delay",   builtin_time_delay,  1, ATTR_DE },
   { "udelay",  builtin_time_udelay, 1, ATTR_DE },
   { "clock",  builtin_time_clock, 0, ATTR_DE },
-  { "get_sec_monotonic",  builtin_time_get_sec_monotonic, 0, ATTR_DE },
-  { "get_msec_monotonic",  builtin_time_get_msec_monotonic, 0, ATTR_DE },
-  { "get_usec_monotonic",  builtin_time_get_usec_monotonic, 0, ATTR_DE },
-  { "get_nsec_monotonic",  builtin_time_get_nsec_monotonic, 0, ATTR_DE },
+  { "secRealtime",  builtin_time_sec_realtime, 0, ATTR_DE },
+  { "msecRealtime",  builtin_time_msec_realtime, 0, ATTR_DE },
+  { "usecRealtime",  builtin_time_usec_realtime, 0, ATTR_DE },
+  { "nsecRealtime",  builtin_time_nsec_realtime, 0, ATTR_DE },
   { NULL,                    NULL,  0, ATTR_DE }
 };
 
