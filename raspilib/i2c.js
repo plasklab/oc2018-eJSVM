@@ -13,7 +13,7 @@ function I2C(mode, sdaPin, sclPin) {
     debugPrint('write('+data+') to ' + addr);
     if (send1byte(data) == I2C.FAILED) {
       debugPrint('failed to write the data.');
-      return i2C.FAILED;
+      return I2C.FAILED;
     }
     if (stop() == I2C.FAILED) return I2C.FAILED;
     return I2C.DONE;

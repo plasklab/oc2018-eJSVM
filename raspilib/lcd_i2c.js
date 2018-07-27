@@ -1,15 +1,14 @@
 /*
  * HD44780 4bit mode
+ * https://www.sparkfun.com/datasheets/LCD/ADM1602K-NSW-FBS-3.3v.pdf
  */
-
-LCD_LINE_1 = 0x80;
 
 // commands
 LCD_CLEARDISPLAY = 0x01;
 LCD_RETURNHOME = 0x02;
 LCD_ENTRYMODESET = 0x04;
 LCD_DISPLAYCONTROL = 0x08;
-LCD_CURSORSHIFT = 0x10;
+LCD_CURSORORDISPLAYSHIFT = 0x10;
 LCD_FUNCTIONSET = 0x20;
 LCD_SETCGRAMADDR = 0x40;
 LCD_SETDDRAMADDR = 0x80;
@@ -19,22 +18,29 @@ LCD_BACKLIGHT = 0x08;
 LCD_NOBACKLIGHT = 0x00;
 
 // flags for display control
-LCD_DISPLAY_ON = 0x04;
-LCD_CURSOR_ON = 0x02;
-LCD_BLINK_ON = 0x01;
+LCD_DISPLAYCONTROL_DISPLAY_ON  = 0x04;
+LCD_DISPLAYCONTROL_CURSOR_ON   = 0x02;
+LCD_DISPLAYCONTROL_BLINK_ON    = 0x01;
 
 // flags for entry mode set
-LCD_ENTRYLEFT = 0x02;
-LCD_ENTRYRIGHT = 0x00;
-LCD_ENTRYSHIFTDECREMENT = 0x01;
-LCD_ENTRYSHIFTINCREMENT = 0x00;
+LCD_ENTRYMODESET_INCDEC_RIGHT = 0x02; // cursor/blink moves to right and DDRAM addrress is increased by 1.
+LCD_ENTRYMODESET_INCDEC_LEFT  = 0x00; // cursor/blink moves to left and DDRAM addrress is increased by 1.
+LCD_ENTRYMODESET_SH_ON        = 0x01; // shifting entire of display is performed according to INCDEC value. (I/D=high, left shift. I/D=low, right shift)
+LCD_ENTRYMODESET_SH_OFF       = 0x00; // shifting entire of display is not performed.
+
+// flags for cursor or display shift
+LCD_CURSORORDISPLAYSHIFT_RIGHT    = 0x04;
+LCD_CURSORORDISPLAYSHIFT_LEFT     = 0x00;
+LCD_CURSORORDISPLAYSHIFT_CURSOR   = 0x08;
+LCD_CURSORORDISPLAYSHIFT_DISPLAY  = 0x00;
 
 // flags for function set
-LCD_4BITMODE = 0x10;
-LCD_2LINE = 0x08;
-LCD_1LINE = 0x00;
-LCD_5x10DOTS = 0x08;
-LCD_5x8DOTS = 0x00;
+LCD_FUNCTIONSET_8BITMODE = 0x10;
+LCD_FUNCTIONSET_4BITMODE = 0x00;
+LCD_FUNCTIONSET_2LINE    = 0x08;
+LCD_FUNCTIONSET_1LINE    = 0x00;
+LCD_FUNCTIONSET_5x11DOTS = 0x04;
+LCD_FUNCTIONSET_5x8DOTS  = 0x00;
 
 
 
@@ -48,10 +54,10 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
   var lcd_i2c_addr = _lcd_i2c_addr;
   var i2c = _i2c;
   
-  var displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
-  var displaycontrol = LCD_DISPLAY_ON;
+  var entrymode;
+  var displaycontrol;
+  var displayfunction;
   var backlightval = LCD_BACKLIGHT;
-  var displayfunction = LCD_4BITMODE | LCD_2LINE | LCD_5x8DOTS;
 
   var debugMode = false;
 
@@ -74,39 +80,56 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
     write4bits(0x02 << 4);
 
     // function set
-    displayfunction = LCD_4BITMODE | LCD_2LINE | LCD_5x8DOTS;
+    //displayfunction = LCD_4BITMODE | LCD_2LINE | LCD_5x8DOTS;
+    displayfunction = LCD_FUNCTIONSET_4BITMODE | LCD_FUNCTIONSET_2LINE | LCD_FUNCTIONSET_5x8DOTS;
     command(LCD_FUNCTIONSET | displayfunction);
 
     debugPrint('entered 4 bit mode');
 
     // display on/off
-    displaycontrol = LCD_DISPLAY_ON;
-    //displaycontrol |= LCD_CURSOR_ON;
-    //displaycontrol |= LCD_BLINK_ON;
+    displaycontrol = LCD_DISPLAYCONTROL_DISPLAY_ON;
     this.display();
 
     // clear it off
     this.clear();
 
     // set the entry mode
-    // 0x02 0x01
-    displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
-    command(LCD_ENTRYMODESET | displaymode);
+    entrymode = LCD_ENTRYMODESET_INCDEC_RIGHT | LCD_ENTRYMODESET_SH_OFF
+    this.entrymodeset();
 
     // return home
     this.home();
 
   }
   this.noDisplay = function() {
-    displaycontrol &= ~LCD_DISPLAY_ON;
+    displaycontrol &= ~LCD_DISPLAYCONTROL_DISPLAY_ON;
     command(LCD_DISPLAYCONTROL | displaycontrol);
   }
   this.display = function() {
-    displaycontrol |= LCD_DISPLAY_ON;
+    displaycontrol |= LCD_DISPLAYCONTROL_DISPLAY_ON;
+    print(LCD_DISPLAYCONTROL | displaycontrol);
     command(LCD_DISPLAYCONTROL | displaycontrol);
+  }
+  this.shiftCursor = function(sh) {
+    if (sh != LCD_CURSORORDISPLAYSHIFT_LEFT &&
+        sh != LCD_CURSORORDISPLAYSHIFT_RIGHT)  {
+      return undefined;
+    }
+    command(LCD_CURSORORDISPLAYSHIFT | LCD_CURSORORDISPLAYSHIFT_CURSOR | sh);
+  }
+  this.shiftDisplay = function(sh) {
+    if (sh !== LCD_CURSORORDISPLAYSHIFT_LEFT &&
+        sh !== LCD_CURSORORDISPLAYSHIFT_RIGHT)  {
+      return undefined;
+    }
+    command(LCD_CURSORORDISPLAYSHIFT | LCD_CURSORORDISPLAYSHIFT_DISPLAY | sh);
   }
   this.clear = function() {
     command(LCD_CLEARDISPLAY);
+    udelay(2000);
+  }
+  this.entrymodeset = function() {
+    command(LCD_ENTRYMODESET | entrymode);
     udelay(2000);
   }
   this.home = function() {
@@ -135,7 +158,7 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
   }
 
 
-  command = function(value) {
+  var command = function(value) {
     debugPrint('command: '+value);
     send(value, 0);
   }
@@ -179,21 +202,3 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
 }
 
 
-/*
-function main() {
-  var LCD_I2C_ADDR = 0x27;
-  var SDAPIN = 12;
-  var SCLPIN = 20;
-  Raspi.init();
-  var i2c = new I2C(I2C.MODE_MASTER, SDAPIN, SCLPIN);
-  var lcd = new LCD_I2C(LCD_I2C_ADDR, i2c);
-  // i2c.setDebugMode(true);
-  // lcd.setDebugMode(true);
-  lcd.init();
-  lcd.setCursor(0, 0);
-  lcd.printStr('KAERITAI MAN');
-}
-
-main();
-
-*/
