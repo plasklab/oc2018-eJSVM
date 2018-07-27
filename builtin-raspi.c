@@ -297,7 +297,7 @@ ObjBuiltinProp raspi_funcs[] = {
   { "gpioRead",   raspi_gpio_read,   1, ATTR_DE },
   { "analogRead", raspi_analog_read, 1, ATTR_DE },
   { "frontMoter", raspi_front_moter, 0, ATTR_DE },
-  { "rigthMoter", raspi_right_moter, 0, ATTR_DE },
+  { "rightMoter", raspi_right_moter, 0, ATTR_DE },
   { "leftMoter",  raspi_left_moter,  0, ATTR_DE },
   { "stopMoter",  raspi_stop_moter,  0, ATTR_DE },
   { NULL,         NULL,              0, ATTR_DE }
