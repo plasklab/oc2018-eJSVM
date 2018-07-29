@@ -145,7 +145,6 @@ BUILTIN_FUNCTION(builtin_raspi_i2c_write) {
   builtin_prologue();
   uint8_t addr = (uint8_t) (fixnum_to_cint(args[1]) & 0xff);
   uint8_t data8bit = (uint8_t) (fixnum_to_cint(args[2]) & 0xff);
-  printf("addr=%d, data8bit=%x\n", addr, data8bit);
 
   int sda_pin, scl_pin;
   if (get_i2c_pin_numbers(context, args[0], &sda_pin, &scl_pin) != SUCCESS) {
