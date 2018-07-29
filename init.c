@@ -105,6 +105,7 @@ void init_builtin(Context *ctx) {
   init_builtin_string(ctx);
   init_builtin_boolean(ctx);
   init_builtin_raspi(ctx);
+  init_builtin_raspi_i2c(ctx);
   init_builtin_time(ctx);
 #ifdef need_flonum
   init_builtin_math(ctx);

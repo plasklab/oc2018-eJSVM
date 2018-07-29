@@ -331,6 +331,7 @@ extern void init_builtin_string(Context *);
 extern void init_builtin_boolean(Context *);
 extern void init_builtin_math(Context *);
 extern void init_builtin_raspi(Context *);
+extern void init_builtin_raspi_i2c(Context *);
 extern void init_builtin_time(Context *);
 #ifdef USE_REGEXP
 #ifdef need_regexp

@@ -76,6 +76,8 @@ EXTERN struct global_constant_objects {
   JSValue g_global;
   JSValue g_math;
   JSValue g_raspi;
+  JSValue g_raspi_i2c;
+  JSValue g_raspi_i2c_proto;
   JSValue g_time;
 } gconsts;
 

@@ -68,6 +68,7 @@ OFILES = allocate.o \
          builtin-regexp.o \
          builtin-string.o \
          builtin-raspi.o \
+         builtin-raspi-i2c.o \
          builtin-time.o \
          call.o \
          codeloader.o \
