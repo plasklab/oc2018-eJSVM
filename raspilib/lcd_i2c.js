@@ -54,7 +54,6 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
   var lcd_i2c_addr = _lcd_i2c_addr;
   var i2c = _i2c;
   
-  var entrymode;
   var displaycontrol;
   var displayfunction;
   var backlightval = LCD_BACKLIGHT;
@@ -94,8 +93,8 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
     this.clear();
 
     // set the entry mode
-    entrymode = LCD_ENTRYMODESET_INCDEC_RIGHT | LCD_ENTRYMODESET_SH_OFF
-    this.entrymodeset();
+    var entrymode = LCD_ENTRYMODESET_INCDEC_RIGHT | LCD_ENTRYMODESET_SH_OFF
+    this.entrymodeset(entrymode);
 
     // return home
     this.home();
@@ -107,7 +106,6 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
   }
   this.display = function() {
     displaycontrol |= LCD_DISPLAYCONTROL_DISPLAY_ON;
-    print(LCD_DISPLAYCONTROL | displaycontrol);
     command(LCD_DISPLAYCONTROL | displaycontrol);
   }
   this.shiftCursor = function(sh) {
@@ -128,7 +126,7 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
     command(LCD_CLEARDISPLAY);
     udelay(2000);
   }
-  this.entrymodeset = function() {
+  this.entrymodeset = function(entrymode) {
     command(LCD_ENTRYMODESET | entrymode);
     udelay(2000);
   }
@@ -152,6 +150,9 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
     for (var i = 0; i < s.length; i++) {
       write(s.charCodeAt(i));
     }
+  }
+  this.putChar = function(c) {
+    write(c & 0xff);
   }
   this.setDebugMode = function(flg) {
     debugMode = flg;
@@ -178,7 +179,7 @@ function LCD_I2C(_lcd_i2c_addr, _i2c) {
     pulseEnable(value);
   }
   var expanderWrite = function(data) {
-    if (i2c.write(lcd_i2c_addr, data | backlightval) == I2C.FAILED) {
+    if (!(i2c.write(lcd_i2c_addr, data | backlightval))) {
       debugPrint('error: expanderWrite');
       return;
     }
