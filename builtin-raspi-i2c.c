@@ -152,6 +152,7 @@ BUILTIN_FUNCTION(builtin_raspi_i2c_write) {
     LOG_EXIT("RaspiI2C.sda or RaspiI2C.sda is not valid value.\n");
   }
 
+  i2c_start(sda_pin, scl_pin);
   if (send_address(sda_pin, scl_pin, addr, I2C_WRITE) != SUCCESS) {
     set_a(context, JS_FALSE); // not succeed
     return;
@@ -161,6 +162,7 @@ BUILTIN_FUNCTION(builtin_raspi_i2c_write) {
     set_a(context, JS_FALSE); // not succeed
     return;
   }
+  i2c_stop(sda_pin, scl_pin);
   set_a(context, JS_TRUE); // succeed
 }
 
